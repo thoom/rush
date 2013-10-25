@@ -27,7 +27,7 @@ def flags(args)
   end
 end
 
-class RushItemBuilder
+class ThrushItemBuilder
   def initialize
     @params = {}
   end
@@ -42,7 +42,7 @@ class RushItemBuilder
 end
 
 def config(env, &block)
-  ev = Docile.dsl_eval(RushItemBuilder.new, &block).build
+  ev = Docile.dsl_eval(ThrushItemBuilder.new, &block).build
   @current_env = env.to_sym if @current_env == :default && ev.has_key?(:default) && ev[:default] == true
   @env[env] = ev
 end
@@ -80,20 +80,20 @@ end
 
 #TODO: Fix the local, ssh functions so that they will work even if they don't have a block passed in
 def local(command, &block)
-  lc = RushItemBuilder.new
+  lc = ThrushItemBuilder.new
   lc.command command
   lc.type :local
   @commands << Docile.dsl_eval(lc, &block).build
 end
 
 def rsync(&block)
-  rc = RushItemBuilder.new
+  rc = ThrushItemBuilder.new
   rc.type :rsync
   @commands << Docile.dsl_eval(rc, &block).build
 end
 
 def ssh(command, &block)
-  sc = RushItemBuilder.new
+  sc = ThrushItemBuilder.new
   sc.command command
   sc.type :ssh
   @commands << Docile.dsl_eval(sc, &block).build
@@ -107,12 +107,12 @@ end
 
 def run!
   if @flags.has_key?(:help)
-    puts header("Rush client help for (ENV = #{ @current_env.upcase })").blue.bold
+    puts header("Thrush client help for (ENV = #{ @current_env.upcase })").blue.bold
     puts "#{ env(:help) }\n"
     exit
   end
 
-  puts header("Rush client for (ENV = #{ @current_env.upcase })").blue.bold
+  puts header("Thrush client for (ENV = #{ @current_env.upcase })").blue.bold
   puts "** DEBUG MODE **".yellow if debug?
   i = 1
 
