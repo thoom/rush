@@ -145,7 +145,8 @@ def run!
       end
     when :rsync
       debug = debug? ? 'n' : ''
-      cmd = ["rsync -#{ debug }vazcO -e ssh --exclude '.git' --exclude '.idea' --exclude '.DS_Store'"]
+      # TODO: The default rsync values I've hardcoded including --no-o, --no-g and other defaults should be flags that someone can pass in.
+      cmd = ["rsync -#{ debug }vazcO --no-o --no-g -e ssh --exclude '.git' --exclude '.idea' --exclude '.DS_Store'"]
 
       ignore = cmd_vals(:ignore, cmd_values)
       ignore.each { |exclude| cmd << "--exclude '#{ exclude }'" } unless ignore.nil? || ignore.empty?
