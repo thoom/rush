@@ -75,6 +75,13 @@ def debug?
   flag? :debug
 end
 
+def flag(key)
+  k = key.to_sym
+  if flag? k
+    @flags[k]
+  end
+end
+
 # Defining commands
 @commands = []
 
@@ -106,13 +113,14 @@ def header(h)
 end
 
 def run!
+  client = env(:client).nil? ? 'Thrush' : env(:client)
   if @flags.has_key?(:help)
-    puts header("Thrush client help for (ENV = #{ @current_env.upcase })").blue.bold
+    puts header("#{ client } client help for (ENV = #{ @current_env.upcase })").blue.bold
     puts "#{ env(:help) }\n"
     exit
   end
 
-  puts header("Thrush client for (ENV = #{ @current_env.upcase })").blue.bold
+  puts header("#{ client } client for (ENV = #{ @current_env.upcase })").blue.bold
   puts "** DEBUG MODE **".yellow if debug?
   i = 1
 
@@ -129,7 +137,7 @@ def run!
       next unless found
     end
 
-    sudo = cmd_vals(:sudo, cmd_values)
+    sudo          = cmd_vals(:sudo, cmd_values)
     debug_command = ''
 
     case cmd_values[:type]
@@ -145,19 +153,32 @@ def run!
       end
     when :rsync
       debug = debug? ? 'n' : ''
+      rsh   = cmd_vals(:rsh, cmd_values)
+
       # TODO: The default rsync values I've hardcoded including --no-o, --no-g and other defaults should be flags that someone can pass in.
-      cmd = ["rsync -#{ debug }vazcO --no-o --no-g -e ssh --exclude '.git' --exclude '.idea' --exclude '.DS_Store'"]
+      cmd   = []
+      cmd << 'sudo' if rsh.nil? && sudo
+      cmd << "rsync -#{ debug }vazcO --no-o --no-g"
+      cmd << "--rsh=#{ rsh }" unless rsh.nil?
+      cmd << "--exclude '.git' --exclude '.idea' --exclude '.DS_Store'"
 
       ignore = cmd_vals(:ignore, cmd_values)
       ignore.each { |exclude| cmd << "--exclude '#{ exclude }'" } unless ignore.nil? || ignore.empty?
 
-      cmd << "--rsync-path='sudo rsync'" if sudo
+      if rsh == 'ssh'
+        cmd << "--rsync-path='sudo rsync'" if sudo
 
-      path = cmd_vals(:path, cmd_values)
-      cmd << "--rsync-path='#{ path }'" unless path.nil? || path.empty?
+        path = cmd_vals(:path, cmd_values)
+        cmd << "--rsync-path='#{ path }'" unless path.nil? || path.empty?
+      end
 
       cmd << cmd_vals(:src, cmd_values)
-      cmd << "#{ cmd_vals(:hostname, cmd_values) }:#{ cmd_vals(:dest, cmd_values) }"
+
+      if rsh == 'ssh'
+        cmd << "#{ cmd_vals(:hostname, cmd_values) }:#{ cmd_vals(:dest, cmd_values) }"
+      else
+        cmd << cmd_vals(:dest, cmd_values)
+      end
 
       command = cmd.join(' ')
       debug_command = command if debug?
@@ -191,21 +212,42 @@ def run!
       #  break
       #end
 
-      status = Open4::popen4('sh') do |pid, stdin, stdout, stderr|
-        stdin.puts command
-        stdin.close
+      #status = Open4::popen4('sh') do |pid, stdin, stdout, stderr|
+      #  stdin.puts command
+      #  stdin.close
+      #
+      #  while (line = stdout.gets)
+      #    puts line
+      #  end
+      #
+      #  while (line = stderr.gets)
+      #    puts line.red
+      #  end
+      #end
+      #
+      #unless status == 0
+      #  puts "Command failed: #{ command }".red
+      #  break
+      #end
 
-        while (line = stdout.gets)
-          puts line
-        end
+      pid, stdin, stdout, stderr = Open4::popen4('sh')
+      stdin.puts command
+      stdin.close
 
+      output = false
+      while (line = stdout.gets)
+        output = true
+        puts line
+      end
+
+      ignored, status = Process.waitpid2 pid
+      if status.to_i == 0
+        puts 'OK' unless output
+      else
+        puts "Command failed (#{ status.exitstatus }): #{ command }".red
         while (line = stderr.gets)
           puts line.red
         end
-      end
-
-      unless status == 0
-        puts "Command failed: #{ command }".red
         break
       end
     end

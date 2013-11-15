@@ -1,16 +1,16 @@
 Gem::Specification.new do |s|
   s.name         = 'thrush'
-  s.version      = '0.0.2'
-  s.date         = '2013-11-05'
+  s.version      = '0.0.5'
+  s.date         = '2013-11-14'
   s.summary      = 'Thrush: Shell DSL'
   s.description  = 'A DSL for building shell scripts'
   s.authors      = ['Z.d. Peacock']
   s.email        = 'zdp@thoomtech.com'
   s.has_rdoc	 = false
-  s.require_path = "lib"
+  s.require_path = 'lib'
   s.files        = %w( README.md LICENSE )
-  s.files        += Dir.glob("lib/**/*")
-  s.files        += Dir.glob("test/**/*")
+  s.files        += Dir.glob('lib/**/*')
+  s.files        += Dir.glob('test/**/*')
   s.homepage     = 'http://github.com/thoom/thrush'
   s.license      = 'MIT'
   
