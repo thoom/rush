@@ -160,10 +160,12 @@ def run!
       cmd << 'sudo' if rsh.nil? && sudo
       cmd << "rsync -#{ debug }vazcO --no-o --no-g"
       cmd << "--rsh=#{ rsh }" unless rsh.nil?
-      cmd << "--exclude '.git' --exclude '.idea' --exclude '.DS_Store'"
 
       ignore = cmd_vals(:ignore, cmd_values)
       ignore.each { |exclude| cmd << "--exclude '#{ exclude }'" } unless ignore.nil? || ignore.empty?
+      
+      delete = cmd_vals(:delete, cmd_values)
+      cmd << "--delete" unless delete.nil? || delete == false
 
       if rsh == 'ssh'
         cmd << "--rsync-path='sudo rsync'" if sudo

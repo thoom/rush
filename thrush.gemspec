@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name         = 'thrush'
-  s.version      = '0.0.6'
-  s.date         = '2015-01-06'
+  s.version      = '0.1.0'
+  s.date         = '2016-04-11'
   s.summary      = 'Thrush: Shell DSL'
   s.description  = 'A DSL for building shell scripts'
   s.authors      = ['Z.d. Peacock']
